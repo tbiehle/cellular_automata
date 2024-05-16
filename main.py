@@ -3,9 +3,11 @@ import random
 from time import sleep
 import curses
 
-def main(stdscr, num_cells, generations, rule) -> None:
-    cells = randomize_cells(num_cells)
-    num_rows = stdscr.getmaxyx()[0]
+def main(stdscr, generations, rule) -> None:
+    num_rows, num_cells = stdscr.getmaxyx()
+
+    #cells = randomize_cells(num_cells)
+    cells = ' ' * (num_cells // 2) + 'X' + ' ' * (num_cells // 2 - 5)
     ruleset = generate_ruleset(rule)
 
     gen = 0
@@ -18,12 +20,16 @@ def main(stdscr, num_cells, generations, rule) -> None:
         stdscr.move(num_rows - 1, 0)
 
         # Print new line
-        stdscr.addstr(cells)
+        for cell in cells:
+            if cell == 'X':
+                stdscr.addch('O')
+            else:
+                stdscr.addch(' ')
         
         cells = make_new_generation(cells, ruleset)
         gen += 1
         stdscr.refresh()
-        sleep(0.1)
+        sleep(0.05)
 
 def randomize_cells(num_cells) -> str:
     """Generate a random list of zeroes and ones of specified length."""
@@ -49,8 +55,9 @@ def make_new_generation(cur_gen, ruleset) -> str:
 def generate_ruleset(rule) -> dict:
     """Generates a ruleset based on the rule number"""
     rule_bin_list = [' '] * 8
-    for i, letter in enumerate(str(bin(rule))):
-        rule_bin_list[i - 1] = 'X' if letter == '1' else ' '
+    bin_rule = format(rule, '08b')  # convert to binary and pad with leading zeros
+    for i, letter in enumerate(bin_rule):
+        rule_bin_list[i] = 'X' if letter == '1' else ' '
 
     ruleset = {
         'XXX': rule_bin_list[0],
@@ -65,10 +72,7 @@ def generate_ruleset(rule) -> dict:
 
     return ruleset
 
-
 if __name__ == "__main__":
-    num_cells = int(argv[1])
-    generations = int(argv[2])
-    rule = int(argv[3])
-    curses.wrapper(main, num_cells, generations, rule)
-    #main(num_cells, generations, rule)
+    generations = int(argv[1])
+    rule = int(argv[2])
+    curses.wrapper(main, generations, rule)
